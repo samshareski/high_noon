@@ -59,7 +59,7 @@ defmodule GameTest do
       |> Game.strike_noon()
       |> Game.player_1_fire()
 
-    assert %{player_2_status: :shot, winner: :player_1}
+    assert %{player_2_status: :shot, winner: :player_1} = game
 
     game =
       Game.new()
@@ -67,7 +67,7 @@ defmodule GameTest do
       |> Game.strike_noon()
       |> Game.player_2_fire()
 
-    assert %{player_1_status: :shot, winner: :player_2}
+    assert %{player_1_status: :shot, winner: :player_2} = game
   end
 
   test "high noon after one backfire ends game" do
@@ -77,7 +77,7 @@ defmodule GameTest do
       |> Game.player_1_fire()
       |> Game.strike_noon()
 
-    assert %{player_1_status: :backfired, winner: :player_2}
+    assert %{player_1_status: :backfired, winner: :player_2} = game
 
     game =
       Game.new()
@@ -85,7 +85,7 @@ defmodule GameTest do
       |> Game.player_2_fire()
       |> Game.strike_noon()
 
-    assert %{player_2_status: :backfired, winner: :player_1}
+    assert %{player_2_status: :backfired, winner: :player_1} = game
   end
 
   test "high noon after two backfires ends game in draw" do
@@ -96,6 +96,6 @@ defmodule GameTest do
       |> Game.player_2_fire()
       |> Game.strike_noon()
 
-    assert %{player_1_status: :backfired, player_2_status: :backfired, winner: :draw}
+    assert %{player_1_status: :backfired, player_2_status: :backfired, winner: :draw} = game
   end
 end

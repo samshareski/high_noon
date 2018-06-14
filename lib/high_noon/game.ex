@@ -53,10 +53,10 @@ defmodule HighNoon.Game do
       game.player_1_status == :fine and game.player_2_status != :fine ->
         %{game | winner: :player_1}
 
-      game.player_2_status == :fine and game.player_2_status != :fine ->
+      game.player_2_status == :fine and game.player_1_status != :fine ->
         %{game | winner: :player_2}
 
-      game.player_2_status != :fine and game.player_2_status != :fine ->
+      game.player_1_status != :fine and game.player_2_status != :fine ->
         %{game | winner: :draw}
 
       true ->
