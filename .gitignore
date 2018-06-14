@@ -22,3 +22,4 @@ erl_crash.dump
 # Ignore package tarball (built via "mix hex.build").
 high_noon-*.tar
 
+.elixir_ls

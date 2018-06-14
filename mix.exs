@@ -15,7 +15,7 @@ defmodule HighNoon.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {HighNoon.Application, []}
+      mod: {HighNoon, []}
     ]
   end
 
