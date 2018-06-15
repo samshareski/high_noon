@@ -16,5 +16,21 @@ defmodule HighNoon do
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: HighNoon.Supervisor]
     Supervisor.start_link(children, opts)
+
+    start_ws_listener()
+  end
+
+  defp start_ws_listener do
+    dispatch =
+      :cowboy_router.compile([
+        {:_, [{"/", HighNoon.Handler, []}]}
+      ])
+
+    {:ok, _} =
+      :cowboy.start_clear(
+        :ws_api,
+        [{:port, 8080}],
+        %{env: %{dispatch: dispatch}}
+      )
   end
 end
