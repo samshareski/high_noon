@@ -12,6 +12,10 @@ defmodule HighNoon.GameServer do
     GenServer.start_link(__MODULE__, :ok)
   end
 
+  def get_game_state(pid) do
+    GenServer.call(pid, :get_game_state)
+  end
+
   def start_game(pid) do
     GenServer.call(pid, :start_game)
   end
@@ -32,6 +36,10 @@ defmodule HighNoon.GameServer do
 
   def init(_args) do
     {:ok, Game.new()}
+  end
+
+  def handle_call(:get_game_state, _from, game) do
+    {:reply, game, game}
   end
 
   def handle_call(:start_game, from, game) do

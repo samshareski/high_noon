@@ -22,7 +22,8 @@ defmodule HighNoon.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:cowboy, "~>2.4"}
+      {:cowboy, "~> 2.4"},
+      {:poison, "~> 3.1"}
     ]
   end
 end

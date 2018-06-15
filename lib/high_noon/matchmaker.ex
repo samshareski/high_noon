@@ -1,6 +1,8 @@
 defmodule HighNoon.Matchmaker do
   use GenServer
 
+  alias HighNoon.GameChannel
+
   # Client
 
   def start_link(_arg) do
@@ -24,7 +26,8 @@ defmodule HighNoon.Matchmaker do
           pid
 
         waiting_pid ->
-          IO.puts("Pairing " <> inspect(pid) <> " with " <> inspect(waiting_pid))
+          Enum.map([pid, waiting_pid], &send(&1, :joining_game))
+          GameChannel.start({pid, waiting_pid})
           nil
       end
 

@@ -1,5 +1,5 @@
 defmodule HighNoon.WSConn do
-  defstruct name: nil, game: nil
+  defstruct name: nil, game_pid: nil, state: :registering
 
   alias HighNoon.WSConn
 
@@ -7,15 +7,19 @@ defmodule HighNoon.WSConn do
     %WSConn{}
   end
 
-  def set_name(ws_conn, name) do
-    %WSConn{ws_conn | name: name}
+  def set_name(conn, name) do
+    %WSConn{conn | name: name}
   end
 
-  def set_game(ws_conn, game) do
-    %WSConn{ws_conn | game: game}
+  def set_game_pid(conn, game_pid) do
+    %WSConn{conn | game_pid: game_pid}
   end
 
-  def clear_game(ws_conn) do
-    %WSConn{ws_conn | game: nil}
+  def set_state(conn, state) do
+    %WSConn{conn | state: state}
+  end
+
+  def clear_game(conn) do
+    %WSConn{conn | game_pid: nil}
   end
 end
