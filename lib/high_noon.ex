@@ -8,8 +8,7 @@ defmodule HighNoon do
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
-      # Starts a worker by calling: HighNoon.Worker.start_link(arg)
-      # {HighNoon.Worker, arg},
+      HighNoon.Matchmaker
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -26,11 +25,6 @@ defmodule HighNoon do
         {:_, [{"/", HighNoon.Handler, []}]}
       ])
 
-    {:ok, _} =
-      :cowboy.start_clear(
-        :ws_api,
-        [{:port, 8080}],
-        %{env: %{dispatch: dispatch}}
-      )
+    {:ok, _} = :cowboy.start_clear(:ws_api, [{:port, 8080}], %{env: %{dispatch: dispatch}})
   end
 end
