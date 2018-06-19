@@ -39,9 +39,8 @@ defmodule HighNoon.GameChannel do
 
     broadcast_state(new_state)
 
-    if new_state.player_1_ready == true and new_state.player_2_ready == true do
-      Process.send_after(self(), :start, :timer.seconds(2))
-    end
+    with %{player_1_ready: true, player_2_ready: true} <- new_state,
+         do: Process.send_after(self(), :start, :timer.seconds(2))
 
     {:noreply, new_state}
   end
@@ -56,10 +55,9 @@ defmodule HighNoon.GameChannel do
     new_state = %{state | game: new_game_state}
 
     type =
-      if new_game_state.winner != nil do
-        :ended
-      else
-        :game_update
+      case new_game_state.winner do
+        nil -> :game_update
+        _ -> :ended_game
       end
 
     broadcast_state(new_state, type)
@@ -80,10 +78,9 @@ defmodule HighNoon.GameChannel do
     new_state = %{state | game: new_game_state}
 
     type =
-      if new_game_state.winner != nil do
-        :ended_game
-      else
-        :game_update
+      case new_game_state.winner do
+        nil -> :game_update
+        _ -> :ended_game
       end
 
     broadcast_state(new_state, type)
