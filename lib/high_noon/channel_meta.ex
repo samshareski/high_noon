@@ -1,25 +1,19 @@
 defmodule HighNoon.ChannelMeta do
-  @enforce_keys [:player_1_pid, :player_2_pid, :game_pid, :game]
-  @derive {Poison.Encoder, except: [:player_1_pid, :player_2_pid, :game_pid]}
+  @enforce_keys [:player_1_pid, :player_2_pid, :game_meta, :game_state]
 
   defstruct player_1_pid: nil,
             player_2_pid: nil,
-            player_1_ready: false,
-            player_2_ready: false,
-            game_pid: nil,
-            game: nil
+            game_meta: nil,
+            game_state: nil
 
   alias HighNoon.ChannelMeta
 
-  def new(pid_1, pid_2, game_pid, game) do
-    %ChannelMeta{player_1_pid: pid_1, player_2_pid: pid_2, game_pid: game_pid, game: game}
-  end
-
-  def ready_player_1(meta) do
-    %{meta | player_1_ready: true}
-  end
-
-  def ready_player_2(meta) do
-    %{meta | player_2_ready: true}
+  def new(pid_1, pid_2, game_meta, game_state) do
+    %ChannelMeta{
+      player_1_pid: pid_1,
+      player_2_pid: pid_2,
+      game_meta: game_meta,
+      game_state: game_state
+    }
   end
 end
