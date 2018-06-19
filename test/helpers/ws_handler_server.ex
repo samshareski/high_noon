@@ -40,10 +40,6 @@ defmodule HighNoon.Test.WSHandlerServer do
     {:noreply, new_state}
   end
 
-  def handle_call(:repsonses, _from, state) do
-    {:reply, state.handler_responses, state}
-  end
-
   def handle_info(msg, state) do
     {:reply, response, new_handler_state} = Handler.websocket_info(msg, state.handler_state)
 
@@ -53,5 +49,9 @@ defmodule HighNoon.Test.WSHandlerServer do
     }
 
     {:noreply, new_state}
+  end
+
+  def handle_call(:repsonses, _from, state) do
+    {:reply, state.handler_responses, state}
   end
 end
