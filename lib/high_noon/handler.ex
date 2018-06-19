@@ -10,14 +10,11 @@ defmodule HighNoon.Handler do
   end
 
   def websocket_init(_state) do
-    {:ok, WSConn.new()}
+    {:ok, %WSConn{}}
   end
 
   def websocket_handle({:text, "name:" <> name}, %{state: :registering} = conn) do
-    new_conn =
-      conn
-      |> WSConn.set_name(name)
-      |> WSConn.set_state(:searching)
+    new_conn = %{conn | name: name, state: :searching}
 
     {:ok, _} = Registry.register(ConnectedPlayers, name, :name)
 
@@ -31,7 +28,7 @@ defmodule HighNoon.Handler do
 
   def websocket_handle(_frame, %{state: :joined_game} = conn) do
     GameChannel.ready(conn.game_pid)
-    new_conn = WSConn.set_state(conn, :ready)
+    new_conn = %{conn | state: :ready}
     {:ok, new_conn}
   end
 
@@ -41,10 +38,7 @@ defmodule HighNoon.Handler do
   end
 
   def websocket_handle(_frame, %{state: :game_ended} = conn) do
-    new_conn =
-      conn
-      |> WSConn.clear_game()
-      |> WSConn.set_state(:searching)
+    new_conn = %{conn | game_pid: nil, state: :searching}
 
     Matchmaker.add_to_pool(self())
     {:reply, {:text, "Searching for a new game"}, new_conn}
@@ -56,26 +50,23 @@ defmodule HighNoon.Handler do
   end
 
   def websocket_info(:joining_game, conn) do
-    new_conn = WSConn.set_state(conn, :joining_game)
+    new_conn = %{conn | state: :joining_game}
     {:reply, {:text, "Joining game"}, new_conn}
   end
 
   def websocket_info({:joined_game, game_pid, game_state}, conn) do
-    new_conn =
-      conn
-      |> WSConn.set_game_pid(game_pid)
-      |> WSConn.set_state(:joined_game)
+    new_conn = %{conn | game_pid: game_pid, state: :joined_game}
 
     {:reply, {:text, game_state}, new_conn}
   end
 
   def websocket_info({:started_game, _game_pid, game_state}, conn) do
-    new_conn = WSConn.set_state(conn, :game_started)
+    new_conn = %{conn | state: :game_started}
     {:reply, {:text, game_state}, new_conn}
   end
 
   def websocket_info({:ended_game, _game_pid, game_state}, conn) do
-    new_conn = WSConn.set_state(conn, :game_ended)
+    new_conn = %{conn | state: :game_ended}
     {:reply, {:text, game_state}, new_conn}
   end
 
