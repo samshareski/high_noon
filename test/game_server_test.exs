@@ -1,5 +1,5 @@
 defmodule GameServerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias HighNoon.{GameServer, Game}
 

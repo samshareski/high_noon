@@ -71,7 +71,7 @@ defmodule HighNoon.GameChannel do
     new_game_state = GameServer.start_game(state.game_pid)
     new_state = %{state | game: new_game_state}
 
-    broadcast_state(new_state, :started)
+    broadcast_state(new_state, :started_game)
 
     {:noreply, new_state}
   end
@@ -81,7 +81,7 @@ defmodule HighNoon.GameChannel do
 
     type =
       if new_game_state.winner != nil do
-        :ended
+        :ended_game
       else
         :game_update
       end

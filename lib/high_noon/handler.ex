@@ -67,12 +67,12 @@ defmodule HighNoon.Handler do
     {:reply, {:text, game_state}, new_conn}
   end
 
-  def websocket_info({:started, _game_pid, game_state}, conn) do
+  def websocket_info({:started_game, _game_pid, game_state}, conn) do
     new_conn = WSConn.set_state(conn, :game_started)
     {:reply, {:text, game_state}, new_conn}
   end
 
-  def websocket_info({:ended, _game_pid, game_state}, conn) do
+  def websocket_info({:ended_game, _game_pid, game_state}, conn) do
     new_conn = WSConn.set_state(conn, :game_ended)
     {:reply, {:text, game_state}, new_conn}
   end
