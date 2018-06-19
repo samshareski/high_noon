@@ -3,7 +3,7 @@ defmodule HighNoon.Handler do
 
   require Logger
 
-  alias HighNoon.{GameChannel, Matchmaker, WSConn}
+  alias HighNoon.{GameChannel, Matchmaker, WSConn, ConnectedPlayers}
 
   def init(req, state) do
     {:cowboy_websocket, req, state, %{idle_timeout: :timer.minutes(5)}}
@@ -18,6 +18,8 @@ defmodule HighNoon.Handler do
       conn
       |> WSConn.set_name(name)
       |> WSConn.set_state(:searching)
+
+    {:ok, _} = Registry.register(ConnectedPlayers, name, :name)
 
     Matchmaker.add_to_pool(self())
     {:reply, {:text, "Welcome " <> name}, new_conn}
