@@ -3,7 +3,7 @@ defmodule HighNoon.Handler do
 
   require Logger
 
-  alias HighNoon.{GameChannel, Matchmaker, WSConn, ConnectedPlayers}
+  alias HighNoon.{GameChannelServer, Matchmaker, WSConn, ConnectedPlayers}
 
   def init(req, state) do
     {:cowboy_websocket, req, state, %{idle_timeout: :timer.minutes(5)}}
@@ -27,13 +27,13 @@ defmodule HighNoon.Handler do
   end
 
   def websocket_handle(_frame, %{state: :joined_game} = conn) do
-    GameChannel.ready(conn.game_pid)
+    GameChannelServer.ready(conn.game_pid)
     new_conn = %{conn | state: :ready}
     {:ok, new_conn}
   end
 
   def websocket_handle(_frame, %{state: :game_started} = conn) do
-    GameChannel.fire(conn.game_pid)
+    GameChannelServer.fire(conn.game_pid)
     {:ok, conn}
   end
 
@@ -54,27 +54,42 @@ defmodule HighNoon.Handler do
     {:reply, {:text, "Joining game"}, new_conn}
   end
 
-  def websocket_info({:joined_game, game_pid, game_state}, conn) do
+  def websocket_info({:joined_game, game_pid, game_roster, game_readiness, game_state}, conn) do
     new_conn = %{conn | game_pid: game_pid, state: :joined_game}
 
-    {:reply, {:text, game_state}, new_conn}
+    {:reply, {:text, game_joined_response(game_roster, game_readiness, game_state)}, new_conn}
   end
 
-  def websocket_info({:started_game, _game_pid, game_state}, conn) do
+  def websocket_info({:started_game, game_readiness, game_state}, conn) do
     new_conn = %{conn | state: :game_started}
-    {:reply, {:text, game_state}, new_conn}
+    {:reply, {:text, game_status_response(game_readiness, game_state)}, new_conn}
   end
 
-  def websocket_info({:ended_game, _game_pid, game_state}, conn) do
+  def websocket_info({:ended_game, game_readiness, game_state}, conn) do
     new_conn = %{conn | state: :game_ended}
-    {:reply, {:text, game_state}, new_conn}
+    {:reply, {:text, game_status_response(game_readiness, game_state)}, new_conn}
   end
 
-  def websocket_info({:game_update, _game_pid, game_state}, conn) do
-    {:reply, {:text, game_state}, conn}
+  def websocket_info({:game_update, game_readiness, game_state}, conn) do
+    {:reply, {:text, game_status_response(game_readiness, game_state)}, conn}
   end
 
   def websocket_info(_info, conn) do
     {:ok, conn}
+  end
+
+  defp game_joined_response(game_roster, game_readiness, game_state) do
+    Poison.encode!(%{
+      game_roster: game_roster,
+      game_readiness: game_readiness,
+      game_state: game_state
+    })
+  end
+
+  defp game_status_response(game_readiness, game_state) do
+    Poison.encode!(%{
+      game_readiness: game_readiness,
+      game_state: game_state
+    })
   end
 end

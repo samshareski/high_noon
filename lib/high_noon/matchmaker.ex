@@ -1,7 +1,7 @@
 defmodule HighNoon.Matchmaker do
   use GenServer
 
-  alias HighNoon.GameChannel
+  alias HighNoon.GameChannelServer
 
   # Client
 
@@ -27,7 +27,7 @@ defmodule HighNoon.Matchmaker do
 
         waiting_pid ->
           Enum.map([pid, waiting_pid], &send(&1, :joining_game))
-          GameChannel.start({pid, waiting_pid})
+          GameChannelServer.start({pid, waiting_pid})
           nil
       end
 
