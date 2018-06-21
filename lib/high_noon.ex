@@ -9,7 +9,8 @@ defmodule HighNoon do
     # List all child processes to be supervised
     children = [
       {Registry, keys: :duplicate, name: HighNoon.ConnectedPlayers},
-      HighNoon.Matchmaker
+      HighNoon.Matchmaker,
+      {DynamicSupervisor, name: HighNoon.GameChannelSupervisor, strategy: :one_for_one}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

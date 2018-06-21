@@ -5,8 +5,8 @@ defmodule HighNoon.GameChannelServer do
 
   # Client
 
-  def start({pid_1, pid_2}) do
-    GenServer.start(__MODULE__, {pid_1, pid_2})
+  def start_link({pid_1, pid_2}) do
+    GenServer.start_link(__MODULE__, {pid_1, pid_2})
   end
 
   def ready(pid) do

@@ -7,7 +7,7 @@ defmodule ChannelTest do
   test "receive join game message after starting channel" do
     {:ok, handler_pid} = WSHandlerServer.start_link()
 
-    {:ok, game_pid} = GameChannelServer.start({handler_pid, self()})
+    {:ok, game_pid} = GameChannelServer.start_link({handler_pid, self()})
 
     assert_receive {:joined_game, ^game_pid, _, _, _}, :timer.seconds(3)
   end
@@ -15,7 +15,7 @@ defmodule ChannelTest do
   test "game starts after exactly 2 ready messages" do
     {:ok, handler_pid} = WSHandlerServer.start_link()
 
-    {:ok, game_pid} = GameChannelServer.start({handler_pid, self()})
+    {:ok, game_pid} = GameChannelServer.start_link({handler_pid, self()})
 
     GameChannelServer.ready(game_pid)
 
@@ -29,7 +29,7 @@ defmodule ChannelTest do
   test "high noon message received after game started" do
     {:ok, handler_pid} = WSHandlerServer.start_link()
 
-    {:ok, game_pid} = GameChannelServer.start({handler_pid, self()})
+    {:ok, game_pid} = GameChannelServer.start_link({handler_pid, self()})
 
     GameChannelServer.ready(game_pid)
     WSHandlerServer.send_ws_message(handler_pid, {:text, "Start game"})
@@ -40,7 +40,7 @@ defmodule ChannelTest do
   test "game end message received when game ends" do
     {:ok, handler_pid} = WSHandlerServer.start_link()
 
-    {:ok, game_pid} = GameChannelServer.start({handler_pid, self()})
+    {:ok, game_pid} = GameChannelServer.start_link({handler_pid, self()})
 
     GameChannelServer.ready(game_pid)
     WSHandlerServer.send_ws_message(handler_pid, {:text, "Start game"})
