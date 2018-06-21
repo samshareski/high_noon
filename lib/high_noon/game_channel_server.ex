@@ -54,15 +54,7 @@ defmodule HighNoon.GameChannelServer do
 
     new_state = %{state | game_state: new_game_state}
 
-    type =
-      case new_game_state.winner do
-        nil -> :game_update
-        _ -> :ended_game
-      end
-
-    broadcast_state(new_state, type)
-
-    {:noreply, new_state}
+    check_winner_and_broadcast(new_state)
   end
 
   def handle_info(:start, state) do
@@ -77,15 +69,7 @@ defmodule HighNoon.GameChannelServer do
   def handle_info({_, {:high_noon, new_game_state}}, state) do
     new_state = %{state | game_state: new_game_state}
 
-    type =
-      case new_game_state.winner do
-        nil -> :game_update
-        _ -> :ended_game
-      end
-
-    broadcast_state(new_state, type)
-
-    {:noreply, new_state}
+    check_winner_and_broadcast(new_state)
   end
 
   def handle_info(_msg, state) do
@@ -135,5 +119,17 @@ defmodule HighNoon.GameChannelServer do
   defp game_readiness_map(state) do
     Map.from_struct(state)
     |> Map.take([:player_1_ready, :player_2_ready])
+  end
+
+  defp check_winner_and_broadcast(state) do
+    case state.game_state.winner do
+      nil ->
+        broadcast_state(state, :game_update)
+        {:noreply, state}
+
+      _any_winner ->
+        broadcast_state(state, :ended_game)
+        {:stop, :normal, state}
+    end
   end
 end

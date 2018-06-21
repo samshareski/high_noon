@@ -74,7 +74,8 @@ defmodule HighNoon.Handler do
     {:reply, {:text, game_status_response(game_readiness, game_state)}, conn}
   end
 
-  def websocket_info(_info, conn) do
+  def websocket_info(info, conn) do
+    Logger.warn("Unrecognized message" <> inspect(info))
     {:ok, conn}
   end
 
