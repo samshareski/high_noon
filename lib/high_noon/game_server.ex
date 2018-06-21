@@ -56,17 +56,40 @@ defmodule HighNoon.GameServer do
 
   def handle_call(:player_1_fire, _from, game) do
     new_game = Game.player_1_fire(game)
-    {:reply, new_game, new_game}
+
+    case new_game do
+      %{winner: nil} ->
+        {:reply, new_game, new_game}
+
+      _ ->
+        {:stop, :normal, new_game, new_game}
+    end
   end
 
   def handle_call(:player_2_fire, _from, game) do
     new_game = Game.player_2_fire(game)
-    {:reply, new_game, new_game}
+
+    case new_game do
+      %{winner: nil} ->
+        {:reply, new_game, new_game}
+
+      _any_winner ->
+        {:stop, :normal, new_game, new_game}
+    end
   end
 
   def handle_info({:high_noon, from}, game) do
     new_game = Game.strike_noon(game)
     GenServer.reply(from, {:high_noon, new_game})
+
+    case new_game do
+      %{winner: nil} ->
+        {:noreply, new_game}
+
+      _any_winner ->
+        {:stop, :normal, new_game}
+    end
+
     {:noreply, new_game}
   end
 
