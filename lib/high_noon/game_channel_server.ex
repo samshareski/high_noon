@@ -23,6 +23,9 @@ defmodule HighNoon.GameChannelServer do
     {:ok, game_server_pid} = GameServer.start_link()
     game_state = GameServer.get_game_state(game_server_pid)
 
+    Process.monitor(player_1_pid)
+    Process.monitor(player_2_pid)
+
     state = GameChannel.new(player_1_pid, player_2_pid, game_server_pid, game_state)
 
     broadcast_initial_state(state)

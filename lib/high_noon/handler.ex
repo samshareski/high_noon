@@ -57,6 +57,8 @@ defmodule HighNoon.Handler do
   def websocket_info({:joined_game, game_pid, game_roster, game_readiness, game_state}, conn) do
     new_conn = %{conn | game_pid: game_pid, state: :joined_game}
 
+    Process.monitor(game_pid)
+
     {:reply, {:text, game_joined_response(game_roster, game_readiness, game_state)}, new_conn}
   end
 
