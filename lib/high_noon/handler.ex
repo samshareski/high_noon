@@ -19,6 +19,8 @@ defmodule HighNoon.Handler do
 
     {:ok, _} = Registry.register(ConnectedPlayers, name, :name)
 
+    Process.monitor(Matchmaker)
+
     Matchmaker.register_and_add(self())
     {:reply, {:text, encode!(%{type: :searching})}, new_conn}
   end
@@ -81,6 +83,10 @@ defmodule HighNoon.Handler do
     {:ok, conn}
   end
 
+  def websocket_info({:DOWN, _ref, :process, _game_pid, :normal}, %{state: :searching} = conn) do
+    {:ok, conn}
+  end
+
   def websocket_info({:DOWN, _ref, :process, _game_pid, :player_disconnect}, conn) do
     new_conn = %{conn | game_pid: nil, state: :disconnected}
     {:reply, {:text, encode!(%{type: :opponent_left})}, new_conn}
@@ -98,6 +104,8 @@ defmodule HighNoon.Handler do
 
   defp search_for_new_game(conn) do
     new_conn = %{conn | game_pid: nil, state: :searching}
+
+    Process.monitor(Matchmaker)
 
     Matchmaker.add_to_pool(self())
     {:reply, {:text, encode!(%{type: :searching})}, new_conn}

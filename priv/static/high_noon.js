@@ -85,8 +85,7 @@ function onSearching(_) {
 }
 
 function onDisconnect(_) {
-  toaster.textContent =
-    'Game Disconnected! Press any key to search for a new game'
+  toaster.textContent = 'Disconnected! Press any key to search for a new game'
 }
 
 function onOpponentLeft(_) {
