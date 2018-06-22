@@ -4,6 +4,7 @@ defmodule HighNoon.Handler do
   require Logger
 
   alias HighNoon.{GameChannelServer, Matchmaker, WSConn, ConnectedPlayers}
+  import Poison, only: [encode!: 1]
 
   def init(req, state) do
     {:cowboy_websocket, req, state, %{idle_timeout: :timer.minutes(5)}}
@@ -19,7 +20,7 @@ defmodule HighNoon.Handler do
     {:ok, _} = Registry.register(ConnectedPlayers, name, :name)
 
     Matchmaker.add_to_pool(self())
-    {:reply, {:text, "Welcome " <> name}, new_conn}
+    {:reply, {:text, encode!(%{type: :searching})}, new_conn}
   end
 
   def websocket_handle(_frame, %{state: :registering} = conn) do
@@ -41,7 +42,7 @@ defmodule HighNoon.Handler do
     new_conn = %{conn | game_pid: nil, state: :searching}
 
     Matchmaker.add_to_pool(self())
-    {:reply, {:text, "Searching for a new game"}, new_conn}
+    {:reply, {:text, encode!(%{type: :searching})}, new_conn}
   end
 
   def websocket_handle(frame, conn) do
@@ -51,7 +52,7 @@ defmodule HighNoon.Handler do
 
   def websocket_info(:joining_game, conn) do
     new_conn = %{conn | state: :joining_game}
-    {:reply, {:text, "Joining game"}, new_conn}
+    {:reply, {:text, encode!(%{type: :joining_game})}, new_conn}
   end
 
   def websocket_info({:joined_game, game_pid, game_roster, game_readiness, game_state}, conn) do
@@ -82,7 +83,8 @@ defmodule HighNoon.Handler do
   end
 
   defp game_joined_response(game_roster, game_readiness, game_state) do
-    Poison.encode!(%{
+    encode!(%{
+      type: :joined_game,
       game_roster: game_roster,
       game_readiness: game_readiness,
       game_state: game_state
@@ -90,7 +92,8 @@ defmodule HighNoon.Handler do
   end
 
   defp game_status_response(game_readiness, game_state) do
-    Poison.encode!(%{
+    encode!(%{
+      type: :game_update,
       game_readiness: game_readiness,
       game_state: game_state
     })
