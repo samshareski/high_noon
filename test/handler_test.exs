@@ -13,7 +13,7 @@ defmodule HandlerTest do
 
     {:reply, {:text, reply}, updated_state} = Handler.websocket_handle({:text, "name:Sam"}, state)
 
-    assert "Welcome Sam" == reply
+    assert Poison.encode!(%{type: :searching}) == reply
     assert %{name: "Sam"} = updated_state
   end
 end
