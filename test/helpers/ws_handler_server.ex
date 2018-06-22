@@ -45,13 +45,18 @@ defmodule Helpers.WSHandlerServer do
   end
 
   def handle_info(msg, state) do
-    {:reply, response, new_handler_state} = Handler.websocket_info(msg, state.handler_state)
+    new_state =
+      case Handler.websocket_info(msg, state.handler_state) do
+        {:reply, response, new_handler_state} ->
+          %{
+            handler_responses: [response | state.handler_responses],
+            received_messages: [msg | state.received_messages],
+            handler_state: new_handler_state
+          }
 
-    new_state = %{
-      handler_responses: [response | state.handler_responses],
-      received_messages: [msg | state.received_messages],
-      handler_state: new_handler_state
-    }
+        {:ok, new_handler_state} ->
+          %{state | handler_state: new_handler_state}
+      end
 
     {:noreply, new_state}
   end

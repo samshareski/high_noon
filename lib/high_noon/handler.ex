@@ -15,11 +15,12 @@ defmodule HighNoon.Handler do
   end
 
   def websocket_handle({:text, "name:" <> name}, %{state: :registering} = conn) do
-    new_conn = %{conn | name: name}
+    new_conn = %{conn | name: name, state: :searching}
 
     {:ok, _} = Registry.register(ConnectedPlayers, name, :name)
 
-    search_for_new_game(new_conn)
+    Matchmaker.register_and_add(self())
+    {:reply, {:text, encode!(%{type: :searching})}, new_conn}
   end
 
   def websocket_handle(_frame, %{state: :registering} = conn) do
@@ -56,6 +57,8 @@ defmodule HighNoon.Handler do
   end
 
   def websocket_info({:joined_game, game_pid, game_roster, game_readiness, game_state}, conn) do
+    Process.monitor(game_pid)
+
     new_conn = %{conn | game_pid: game_pid, state: :joined_game}
 
     {:reply, {:text, game_joined_response(game_roster, game_readiness, game_state)}, new_conn}
