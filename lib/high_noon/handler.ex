@@ -83,18 +83,26 @@ defmodule HighNoon.Handler do
     {:ok, conn}
   end
 
-  def websocket_info({:DOWN, _ref, :process, _game_pid, :normal}, %{state: :searching} = conn) do
-    {:ok, conn}
-  end
-
   def websocket_info({:DOWN, _ref, :process, _game_pid, :player_disconnect}, conn) do
     new_conn = %{conn | game_pid: nil, state: :disconnected}
     {:reply, {:text, encode!(%{type: :opponent_left})}, new_conn}
   end
 
-  def websocket_info({:DOWN, _ref, :process, _game_pid, _reason}, conn) do
-    new_conn = %{conn | game_pid: nil, state: :disconnected}
-    {:reply, {:text, encode!(%{type: :disconnected})}, new_conn}
+  def websocket_info({:DOWN, _ref, :process, pid, _reason}, conn) do
+    game_pid = conn.game_pid
+
+    case {pid, conn.state} do
+      {^game_pid, _} ->
+        new_conn = %{conn | game_pid: nil, state: :disconnected}
+        {:reply, {:text, encode!(%{type: :disconnected})}, new_conn}
+
+      {{Matchmaker, _}, :searching} ->
+        new_conn = %{conn | game_pid: nil, state: :disconnected}
+        {:reply, {:text, encode!(%{type: :disconnected})}, new_conn}
+
+      _ ->
+        {:ok, conn}
+    end
   end
 
   def websocket_info(info, conn) do

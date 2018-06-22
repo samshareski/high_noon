@@ -3,7 +3,6 @@ defmodule HighNoon.Matchmaker do
 
   alias HighNoon.GameChannelSupervisor
 
-  require IEx
   require Logger
 
   @interval :timer.seconds(1)
