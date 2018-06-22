@@ -24,7 +24,12 @@ defmodule HighNoon do
   defp start_ws_listener do
     dispatch =
       :cowboy_router.compile([
-        {:_, [{"/", HighNoon.Handler, []}]}
+        {:_,
+         [
+           {"/", :cowboy_static, {:priv_file, :high_noon, "static/index.html"}},
+           {"/static/[...]", :cowboy_static, {:priv_dir, :high_noon, "static"}},
+           {"/ws", HighNoon.Handler, []}
+         ]}
       ])
 
     {:ok, _} = :cowboy.start_clear(:ws_api, [{:port, 8080}], %{env: %{dispatch: dispatch}})

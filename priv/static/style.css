@@ -1,0 +1,29 @@
+.container {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 2fr 4fr 1fr;
+  grid-template-areas:
+    'player1label clock player2label'
+    'player1 toaster player2'
+    '. fire .';
+  justify-items: center;
+  align-items: center;
+}
+
+.player {
+  font-size: 2rem;
+  white-space: pre;
+}
+
+.player1 {
+  grid-area: player1;
+}
+
+.player2 {
+  grid-area: player2;
+}
+
+.clock {
+  font-size: 8rem;
+  grid-area: clock;
+}
