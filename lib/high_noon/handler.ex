@@ -15,12 +15,11 @@ defmodule HighNoon.Handler do
   end
 
   def websocket_handle({:text, "name:" <> name}, %{state: :registering} = conn) do
-    new_conn = %{conn | name: name, state: :searching}
+    new_conn = %{conn | name: name}
 
     {:ok, _} = Registry.register(ConnectedPlayers, name, :name)
 
-    Matchmaker.add_to_pool(self())
-    {:reply, {:text, encode!(%{type: :searching})}, new_conn}
+    search_for_new_game(new_conn)
   end
 
   def websocket_handle(_frame, %{state: :registering} = conn) do
@@ -39,14 +38,15 @@ defmodule HighNoon.Handler do
   end
 
   def websocket_handle(_frame, %{state: :game_ended} = conn) do
-    new_conn = %{conn | game_pid: nil, state: :searching}
+    search_for_new_game(conn)
+  end
 
-    Matchmaker.add_to_pool(self())
-    {:reply, {:text, encode!(%{type: :searching})}, new_conn}
+  def websocket_handle(_frame, %{state: :disconnected} = conn) do
+    search_for_new_game(conn)
   end
 
   def websocket_handle(frame, conn) do
-    Logger.info("Unrecognized message: " <> inspect(frame))
+    Logger.warn("Unrecognized message: " <> inspect(frame))
     {:reply, {:text, "Unrecognized message"}, conn}
   end
 
@@ -57,8 +57,6 @@ defmodule HighNoon.Handler do
 
   def websocket_info({:joined_game, game_pid, game_roster, game_readiness, game_state}, conn) do
     new_conn = %{conn | game_pid: game_pid, state: :joined_game}
-
-    Process.monitor(game_pid)
 
     {:reply, {:text, game_joined_response(game_roster, game_readiness, game_state)}, new_conn}
   end
@@ -77,9 +75,30 @@ defmodule HighNoon.Handler do
     {:reply, {:text, game_status_response(game_readiness, game_state)}, conn}
   end
 
+  def websocket_info({:DOWN, _ref, :process, _game_pid, :normal}, conn) do
+    {:ok, conn}
+  end
+
+  def websocket_info({:DOWN, _ref, :process, _game_pid, :player_disconnect}, conn) do
+    new_conn = %{conn | game_pid: nil, state: :disconnected}
+    {:reply, {:text, encode!(%{type: :opponent_left})}, new_conn}
+  end
+
+  def websocket_info({:DOWN, _ref, :process, _game_pid, _reason}, conn) do
+    new_conn = %{conn | game_pid: nil, state: :disconnected}
+    {:reply, {:text, encode!(%{type: :disconnected})}, new_conn}
+  end
+
   def websocket_info(info, conn) do
     Logger.warn("Unrecognized message" <> inspect(info))
     {:ok, conn}
+  end
+
+  defp search_for_new_game(conn) do
+    new_conn = %{conn | game_pid: nil, state: :searching}
+
+    Matchmaker.add_to_pool(self())
+    {:reply, {:text, encode!(%{type: :searching})}, new_conn}
   end
 
   defp game_joined_response(game_roster, game_readiness, game_state) do

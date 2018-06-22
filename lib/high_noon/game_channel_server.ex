@@ -1,6 +1,8 @@
 defmodule HighNoon.GameChannelServer do
   use GenServer
 
+  require Logger
+
   alias HighNoon.{GameChannel, GameServer, ConnectedPlayers}
 
   # Client
@@ -75,7 +77,12 @@ defmodule HighNoon.GameChannelServer do
     check_winner_and_broadcast(new_state)
   end
 
-  def handle_info(_msg, state) do
+  def handle_info({:DOWN, _ref, :process, _player_pid, _reason}, state) do
+    {:stop, :player_disconnect, state}
+  end
+
+  def handle_info(msg, state) do
+    Logger.warn("Unrecognized msg" <> inspect(msg))
     {:noreply, state}
   end
 

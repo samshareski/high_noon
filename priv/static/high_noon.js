@@ -84,6 +84,16 @@ function onSearching(_) {
   toaster.textContent = 'Searching...'
 }
 
+function onDisconnect(_) {
+  toaster.textContent =
+    'Game Disconnected! Press any key to search for a new game'
+}
+
+function onOpponentLeft(_) {
+  toaster.textContent =
+    'Your cowardly opponent has left! Press any key to search for a new game'
+}
+
 function onJoining(_) {
   toaster.textContent = 'Joining Game...'
 }
@@ -173,6 +183,8 @@ function onGameUpdate({ game_readiness, game_state }) {
 
 const RESPONSE_FUNCTIONS = {
   searching: onSearching,
+  disconnected: onDisconnect,
+  opponent_left: onOpponentLeft,
   joining_game: onJoining,
   joined_game: onJoin,
   game_update: onGameUpdate
