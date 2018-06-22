@@ -46,8 +46,7 @@ defmodule HighNoon.Handler do
     search_for_new_game(conn)
   end
 
-  def websocket_handle(frame, conn) do
-    Logger.warn("Unrecognized message: " <> inspect(frame))
+  def websocket_handle(_frame, conn) do
     {:reply, {:text, "Unrecognized message"}, conn}
   end
 
