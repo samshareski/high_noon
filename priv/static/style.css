@@ -1,13 +1,21 @@
+* {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 .container {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   grid-template-rows: 2fr 4fr 1fr;
   grid-template-areas:
-    'player1label clock player2label'
-    'player1 toaster player2'
-    '. fire .';
+    'player_1_label clock player_2_label'
+    'player_1 toaster player_2'
+    'player_1_assignment fire player_2_assignment';
   justify-items: center;
   align-items: center;
+}
+
+.hidden {
+  display: none;
 }
 
 .player {
@@ -15,17 +23,51 @@
   white-space: pre;
 }
 
-.player1 {
-  grid-area: player1;
+.player_1 {
+  grid-area: player_1;
 }
 
-.player2 {
-  grid-area: player2;
+.player_2 {
+  grid-area: player_2;
+}
+
+.label {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.player_1_label {
+  grid-area: player_1_label;
+}
+
+.player_2_label {
+  grid-area: player_2_label;
+}
+
+.assignment {
+  font-size: 1.5rem;
+  text-align: center;
+  white-space: pre;
+}
+
+.player_1_assignment {
+  grid-area: player_1_assignment;
+}
+
+.player_2_assignment {
+  grid-area: player_2_assignment;
 }
 
 .clock {
   font-size: 8rem;
   grid-area: clock;
+}
+
+.toaster {
+  text-align: center;
+  font-size: 2rem;
+  white-space: pre-wrap;
+  grid-area: toaster;
 }
 
 .fire {
