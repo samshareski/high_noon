@@ -32,6 +32,9 @@ defmodule HighNoon do
          ]}
       ])
 
-    {:ok, _} = :cowboy.start_clear(:ws_api, [{:port, 8080}], %{env: %{dispatch: dispatch}})
+    {:ok, _} =
+      :cowboy.start_clear(:ws_api, [{:port, Application.get_env(:high_noon, :port, 8080)}], %{
+        env: %{dispatch: dispatch}
+      })
   end
 end
