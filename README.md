@@ -1,21 +1,7 @@
-# HighNoon
+# High Noon
 
-**TODO: Add description**
+## To Run Locally
 
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `high_noon` to your list of dependencies in `mix.exs`:
-
-```elixir
-def deps do
-  [
-    {:high_noon, "~> 0.1.0"}
-  ]
-end
-```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/high_noon](https://hexdocs.pm/high_noon).
-
+1.  [Install Elixir](https://elixir-lang.org/install.html)
+2.  run `mix run --no-halt`
+3.  visit `http://localhost:8080`
