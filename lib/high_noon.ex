@@ -5,6 +5,8 @@ defmodule HighNoon do
 
   use Application
 
+  require Logger
+
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
@@ -13,12 +15,12 @@ defmodule HighNoon do
       {DynamicSupervisor, name: HighNoon.GameChannelSupervisor, strategy: :one_for_one}
     ]
 
+    start_ws_listener()
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: HighNoon.Supervisor]
     Supervisor.start_link(children, opts)
-
-    start_ws_listener()
   end
 
   defp start_ws_listener do
@@ -38,5 +40,7 @@ defmodule HighNoon do
       :cowboy.start_clear(:ws_api, [{:port, port}], %{
         env: %{dispatch: dispatch}
       })
+
+    Logger.info("Now listening on port: #{port}")
   end
 end
