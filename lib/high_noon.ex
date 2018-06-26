@@ -34,10 +34,7 @@ defmodule HighNoon do
          ]}
       ])
 
-    port_string = Application.get_env(:high_noon, :port, "8080")
-    Logger.info("Port env variable was: #{port_string}")
-    {port, _} = Integer.parse(port_string)
-    # {port, _} = Application.get_env(:high_noon, :port, "8080") |> Integer.parse()
+    port = System.get_env("PORT") || 8080
 
     {:ok, _} =
       :cowboy.start_clear(:ws_api, [{:port, port}], %{
