@@ -32,8 +32,10 @@ defmodule HighNoon do
          ]}
       ])
 
+    {port, _} = Application.get_env(:high_noon, :port, "8080") |> Integer.parse()
+
     {:ok, _} =
-      :cowboy.start_clear(:ws_api, [{:port, Application.get_env(:high_noon, :port, 8080)}], %{
+      :cowboy.start_clear(:ws_api, [{:port, port}], %{
         env: %{dispatch: dispatch}
       })
   end
