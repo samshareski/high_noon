@@ -34,7 +34,7 @@ defmodule HighNoon do
          ]}
       ])
 
-    port = System.get_env("PORT") || 8080
+    {port, _} = (System.get_env("PORT") || "8080") |> Integer.parse()
 
     {:ok, _} =
       :cowboy.start_clear(:ws_api, [{:port, port}], %{
