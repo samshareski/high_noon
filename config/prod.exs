@@ -1,3 +1,3 @@
 use Mix.Config
 
-config :high_noon, :port, "${PORT}"
+config :high_noon, :port, {:system, "PORT"}
