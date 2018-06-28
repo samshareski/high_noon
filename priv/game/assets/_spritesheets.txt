@@ -1,0 +1,4 @@
+shoot_spritesheet.png,400,400,17
+shoot_fail_spritesheet.png,400,400,15
+die_spritesheet.png,400,400,21
+idle_spritesheet.png,400,400,30

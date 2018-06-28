@@ -28,8 +28,8 @@ defmodule HighNoon do
       :cowboy_router.compile([
         {:_,
          [
-           {"/", :cowboy_static, {:priv_file, :high_noon, "static/index.html"}},
-           {"/static/[...]", :cowboy_static, {:priv_dir, :high_noon, "static"}},
+           {"/", :cowboy_static, {:priv_file, :high_noon, "game/index.html"}},
+           {"/game/[...]", :cowboy_static, {:priv_dir, :high_noon, "game"}},
            {"/ws", HighNoon.Handler, []}
          ]}
       ])
