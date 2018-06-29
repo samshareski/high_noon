@@ -3,6 +3,8 @@
 var game;
 var soundManager;
 var currentGameState = undefined;
+var currentPlayer;
+var canPoke = true;
 
 // global game options
 var gameOptions = {
@@ -40,7 +42,9 @@ function getWebSocketURI() {
 }
 
 function pokeWebSocket(socket) {
-    socket.send('poke')
+    if(canPoke){
+        socket.send('poke')
+    }
 }
 
 function onMessage(msg) {
@@ -68,12 +72,15 @@ function onDisconnect(_) {
 }
 
 function onSearching() {
-  console.log('searching1')
+    game.scene.scenes[0].resetScene()
+    game.scene.scenes[0].searching();
 }
 
 function onJoin({ game_roster }) {
   console.log('game roster', game_roster)
   console.log('game', game)
+  currentPlayer = game_roster.assignment
+  game.scene.scenes[0].joined();
   game.scene.scenes[0].setPlayers(game_roster.player_1, game_roster.player_2)
 
 }
@@ -82,45 +89,77 @@ var player1Backfired = false
 var player2Backfired = false
 
 function onGameUpdate({ game_readiness, game_state }) {
-
-    if(currentGameState != undefined && !currentGameState.high_noon && game_state.high_noon){
-        game.scene.scenes[0].highNoon();
-    }
-
-    switch (game_state.player_1_status) {
-        case 'fine':
-            break
-        case 'backfired':
-            if(!player1Backfired){
-                game.scene.scenes[0].player1Backfire();
-                player1Backfired = true
+    if (!game_state.started) {
+        if(game_readiness.player_1_ready){
+            if(currentPlayer ===  'player_1'){
+                game.scene.scenes[0].waiting();
             }
-            break
-        case 'shot':
-            game.scene.scenes[0].player1Die();
-            game.scene.scenes[0].player2Shoot();
-            break
-    }
-
-    switch (game_state.player_2_status) {
-        case 'fine':
-            break
-        case 'backfired':
-            if(!player2Backfired){
-                game.scene.scenes[0].player2Backfire();
-                player2Backfired = true
+        }
+        
+        if(game_readiness.player_2_ready){
+            if(currentPlayer ===  'player_2'){
+                game.scene.scenes[0].waiting();
             }
-            break
-        case 'shot':
-            game.scene.scenes[0].player2Die();
-            game.scene.scenes[0].player1Shoot();
-            break
+        }
+    }else{
+        if(!currentGameState.high_noon && game_state.high_noon){
+            game.scene.scenes[0].highNoon();
+        }
+
+        if(!currentGameState.started && game_state.started){
+            game.scene.scenes[0].clearText();
+        }
+    
+        switch (game_state.player_1_status) {
+            case 'fine':
+                break
+            case 'backfired':
+                if(!player1Backfired){
+                    game.scene.scenes[0].player1Backfire();
+                    player1Backfired = true
+                }
+                break
+            case 'shot':
+                game.scene.scenes[0].player1Die();
+                game.scene.scenes[0].player2Shoot();
+                break
+        }
+    
+        switch (game_state.player_2_status) {
+            case 'fine':
+                break
+            case 'backfired':
+                if(!player2Backfired){
+                    game.scene.scenes[0].player2Backfire();
+                    player2Backfired = true
+                }
+                break
+            case 'shot':
+                game.scene.scenes[0].player2Die();
+                game.scene.scenes[0].player1Shoot();
+                break
+        }
+
+        if (game_state.winner !== null) {
+            canPoke = false;
+            setTimeout(
+            function() {
+                game.scene.scenes[0].finished();
+                canPoke = true;
+            }, 5000);
+
+            if (game_state.winner === 'draw') {
+                game.scene.scenes[0].draw();
+            } else if (game_state.winner === window.currentPlayer) {
+                game.scene.scenes[0].youWin();
+            } else {
+                game.scene.scenes[0].youLose();
+            }
+        }
     }
 
     currentGameState = game_state;
 }
-  
-
 
 const RESPONSE_FUNCTIONS = {
     searching: onSearching,
@@ -187,8 +226,6 @@ class playGame extends Phaser.Scene{
         this.load.spritesheet('player_backfire', 'game/assets/shoot_fail_spritesheet.png', {frameWidth: 400, frameHeight: 400, endFrame: 15});
         this.load.spritesheet('player_die', 'game/assets/die_spritesheet.png', {frameWidth: 400, frameHeight: 400, endFrame: 21});
 
-        // game.load.spritesheet('mummy', 'assets/sprites/metalslug_mummy37x45.png', 37, 45, 18);
-
         this.load.audio("wind", "game/assets/sounds/wind.mp3");
         this.load.audio("tumbleweedSound", "game/assets/sounds/tumbleweed.mp3");
 
@@ -241,7 +278,6 @@ class playGame extends Phaser.Scene{
         this.canShoot = true;
         this.canTumbleweed = true;
         this.tumbleweedMoving = false;
-        this.isHighNoon = false;
 
         // group to store all rotating knives
         this.cloudGroup = this.add.group();
@@ -262,18 +298,68 @@ class playGame extends Phaser.Scene{
         this.cloudGroup.add(this.add.sprite(game.config.width / 2, game.config.height / 4, "cloud2"));
         this.cloudGroup.add(this.add.sprite(game.config.width / 1.2, game.config.height / 7, "cloud3"));
 
-        this.wind = this.sound.add("wind", { volume: 0.15, loop: true})
+        this.wind = this.sound.add("wind", {volume: 0.15, loop: true})
         this.wind.play();
 
-        // waiting for player input to shoot
-        // this.input.on("pointerdown", this.shoot, this);
+        this.status = this.add.text(game.config.width / 2, game.config.height / 2, "", { font: "bold 64px Arial", fill: '#000'});
+        this.status.setOrigin(0.5,0)
+        this.status.depth = 6;
+
+        this.subText = this.add.text(game.config.width / 2, game.config.height / 1.8, "", { font: "bold 32px Arial", fill: '#000'});
+        this.subText.setOrigin(0.5,0)
+        this.subText.depth = 6;
+    }
+
+    draw(){
+        this.status.setText("Draw!");
+        this.status.alpha = 0;
+        this.add.tween({targets: this.status, ease: 'Linear', duration: 600,  alpha: 1})
+    }
+
+    youWin(){
+        this.status.setText("You Win!");
+        this.status.alpha = 0;
+        this.add.tween({targets: this.status, ease: 'Linear', duration: 600,  alpha: 1})
+    }
+
+    youLose(){
+        this.status.setText("You Lose");
+        this.status.alpha = 0;
+        this.add.tween({targets: this.status, ease: 'Linear', duration: 600, alpha: 1})
+    }
+
+    finished(){
+        this.subText.setText("click to search for new game");
+        this.subText.alpha = 0;
+        this.add.tween({targets: this.subText, ease: 'Linear', duration: 600, alpha: 1})
+    }
+
+    searching(){
+        this.status.setText("Searching");
+    }
+
+    joined(){
+        this.status.setText("Click to Ready");
+    }
+
+    waiting(){
+        this.status.setText("Waiting for other player");
+    }
+
+    clearText(){
+        this.status.setText("");
+        this.subText.setText("");
     }
 
     resetScene(){
-        this.player1.destroy();
-        this.player1Name.destroy();
-        this.player2.destroy();
-        this.player2Name.destroy();
+        if(this.player1){
+            this.player1.destroy();
+            this.player1Name.destroy();
+            this.player2.destroy();
+            this.player2Name.destroy();
+            this.minuteHand.rotation -= 0.2;
+        }
+        this.clearText();
     }
 
     setPlayers(player1, player2){
@@ -285,7 +371,7 @@ class playGame extends Phaser.Scene{
         this.player1 = this.add.sprite(game.config.width / 3.5, game.config.height / 1.4, 'idle');
         this.player1.anims.play('idle');
         this.player1.depth = 3;
-        this.player1Name = this.add.text(16, game.config.height / 1.1, name, { font: "bold 64px Arial", fill: '#000'});
+        this.player1Name = this.add.text(16, game.config.height / 1.1, currentPlayer === 'player_1' ? name + '🤠' : name, { font: "bold 64px Arial", fill: '#000'});
         this.player1Name.depth = 5;
     }
 
@@ -294,49 +380,36 @@ class playGame extends Phaser.Scene{
         this.player2.anims.play('idle');
         this.player2.depth = 3;
         this.player2.scaleX = -1
-        this.player2Name = this.add.text(game.config.width / 1.02, game.config.height / 1.1, name, { font: "bold 64px Arial", fill: '#000'});
+        this.player2Name = this.add.text(game.config.width / 1.02, game.config.height / 1.1, currentPlayer === 'player_2' ? '🤠' + name : name, { font: "bold 64px Arial", fill: '#000'});
         this.player2Name.x -= (this.player2Name.width);
         this.player2Name.depth = 5;
     }
 
-    // method to shoot
-    // shoot(){
-    //     // can the player shoot?
-    //     if(this.canShoot){
-
-    //         // player can't shoot anymore
-    //         this.canShoot = false;
-    //         console.log('pew pew');
-    //         socket.send('poke')
-    //     }
-    // }
-
     player1Die(){
-        this.player1.anims.play('die')
+        this.player1.anims.play('die');
     }
 
     player1Shoot(){
-        this.player1.anims.play('shoot')
+        this.player1.anims.play('shoot');
     }
 
     player1Backfire(){
-        this.player1.anims.play('backfire')
+        this.player1.anims.play('backfire');
     }
 
     player2Die(){
-        this.player2.anims.play('die')
+        this.player2.anims.play('die');
     }
 
     player2Shoot(){
-        this.player2.anims.play('shoot')
+        this.player2.anims.play('shoot');
     }
 
     player2Backfire(){
-        this.player2.anims.play('backfire')
+        this.player2.anims.play('backfire');
     }
 
     highNoon(){
-        this.isHighNoon = true;
         this.add.tween({targets: this.minuteHand, ease: 'Bounce', duration: 200, delay: 0, angle: 0})
     }
 
