@@ -12,6 +12,7 @@ defmodule HighNoon do
     children = [
       {Registry, keys: :duplicate, name: HighNoon.ConnectedPlayers},
       HighNoon.Matchmaker,
+      HighNoon.Leaderboard,
       {DynamicSupervisor, name: HighNoon.GameChannelSupervisor, strategy: :one_for_one}
     ]
 
@@ -30,7 +31,9 @@ defmodule HighNoon do
          [
            {"/", :cowboy_static, {:priv_file, :high_noon, "game/index.html"}},
            {"/game/[...]", :cowboy_static, {:priv_dir, :high_noon, "game"}},
-           {"/ws", HighNoon.Handler, []}
+           {"/ws", HighNoon.Handler, []},
+           {"/leaderboard/", :cowboy_static, {:priv_file, :high_noon, "leaderboard/index.html"}},
+           {"/leaderboard/ws", HighNoon.LeaderboardHandler, []}
          ]}
       ])
 

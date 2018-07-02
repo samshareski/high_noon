@@ -3,7 +3,7 @@ defmodule HighNoon.GameChannelServer do
 
   require Logger
 
-  alias HighNoon.{GameChannel, GameServer, ConnectedPlayers}
+  alias HighNoon.{GameChannel, GameServer, Leaderboard, ConnectedPlayers}
 
   # Client
 
@@ -137,7 +137,13 @@ defmodule HighNoon.GameChannelServer do
         broadcast_state(state, :game_update)
         {:noreply, state}
 
-      _any_winner ->
+      winner ->
+        case winner do
+          :player_1 -> Leaderboard.record_win(state.player_1_pid)
+          :player_2 -> Leaderboard.record_win(state.player_2_pid)
+          _ -> nil
+        end
+
         broadcast_state(state, :ended_game)
         {:stop, :normal, state}
     end
