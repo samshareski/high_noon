@@ -29,8 +29,8 @@ defmodule HighNoon do
         {:_,
          [
            {"/", :cowboy_static, {:priv_file, :high_noon, "game/index.html"}},
-           {"/game/[...]", :cowboy_static, {:priv_dir, :high_noon, "game"}},
-           {"/ws", HighNoon.Handler, []}
+           {"/ws", HighNoon.Handler, []},
+           {"/[...]", :cowboy_static, {:priv_dir, :high_noon, "game"}}
          ]}
       ])
 
