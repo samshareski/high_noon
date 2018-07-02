@@ -1,4 +1,3 @@
-defmodule HighNoon do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -30,10 +29,10 @@ defmodule HighNoon do
         {:_,
          [
            {"/", :cowboy_static, {:priv_file, :high_noon, "game/index.html"}},
-           {"/game/[...]", :cowboy_static, {:priv_dir, :high_noon, "game"}},
-           {"/ws", HighNoon.Handler, []},
            {"/leaderboard/", :cowboy_static, {:priv_file, :high_noon, "leaderboard/index.html"}},
-           {"/leaderboard/ws", HighNoon.LeaderboardHandler, []}
+           {"/leaderboard/ws", HighNoon.LeaderboardHandler, []},
+           {"/ws", HighNoon.Handler, []},
+           {"/[...]", :cowboy_static, {:priv_dir, :high_noon, "game"}}
          ]}
       ])
 
