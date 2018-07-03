@@ -24,7 +24,7 @@ defmodule HighNoon.Leaderboard do
   def handle_cast({:record_win, winning_pid}, state) do
     player_name =
       case player_name(winning_pid) do
-        nil -> "Unknown Player"
+        nil -> "Mr. Robot"
         name -> name
       end
 
