@@ -2,6 +2,7 @@ defmodule HighNoon.GameChannelServer do
   use GenServer
 
   require Logger
+  require IEx
 
   alias HighNoon.{GameChannel, GameServer, Leaderboard, ConnectedPlayers}
 

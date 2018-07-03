@@ -1,11 +1,11 @@
 defmodule HighNoon.Matchmaker do
   use GenServer
 
-  alias HighNoon.GameChannelSupervisor
+  alias HighNoon.{GameChannelSupervisor, AIPlayer}
 
   require Logger
 
-  @interval :timer.seconds(1)
+  @interval :timer.seconds(3)
 
   # Client
 
@@ -38,14 +38,19 @@ defmodule HighNoon.Matchmaker do
   end
 
   def handle_info(:matchmake, state) do
-    new_state =
+    remaining =
       state
       |> Enum.reverse()
       |> Enum.chunk_every(2)
       |> Enum.reduce([], &matchmake_reducer/2)
 
+    case remaining do
+      [remaining_player] -> start_ai_game(remaining_player)
+      [] -> nil
+    end
+
     Process.send_after(self(), :matchmake, @interval)
-    {:noreply, new_state}
+    {:noreply, []}
   end
 
   def handle_info({:DOWN, _ref, :process, player_pid, _reason}, state) do
@@ -66,5 +71,10 @@ defmodule HighNoon.Matchmaker do
 
   defp matchmake_reducer([remaining_player], acc) do
     [remaining_player | acc]
+  end
+
+  defp start_ai_game(player_pid) do
+    {:ok, ai_pid} = AIPlayer.start()
+    GameChannelSupervisor.start_game({player_pid, ai_pid})
   end
 end

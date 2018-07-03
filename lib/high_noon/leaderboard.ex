@@ -24,21 +24,30 @@ defmodule HighNoon.Leaderboard do
   def handle_cast({:record_win, winning_pid}, state) do
     player_name =
       case player_name(winning_pid) do
-        nil -> "Unknown Player"
+        nil -> "Mr. Robot"
         name -> name
       end
 
-    new_entry =
-      case List.keyfind(state.leaderboard, winning_pid, 0) do
-        nil -> {winning_pid, player_name, 1}
-        {^winning_pid, name, wins} -> {winning_pid, name, wins + 1}
+    new_state =
+      case player_name do
+        "Mr. Robot" ->
+          state
+
+        _ ->
+          new_entry =
+            case List.keyfind(state.leaderboard, winning_pid, 0) do
+              nil -> {winning_pid, player_name, 1}
+              {^winning_pid, name, wins} -> {winning_pid, name, wins + 1}
+            end
+
+          new_leaderboard = List.keystore(state.leaderboard, winning_pid, 0, new_entry)
+
+          new_state = %{state | leaderboard: new_leaderboard}
+
+          notify_listeners(new_state)
+
+          new_state
       end
-
-    new_leaderboard = List.keystore(state.leaderboard, winning_pid, 0, new_entry)
-
-    new_state = %{state | leaderboard: new_leaderboard}
-
-    notify_listeners(new_state)
 
     {:noreply, new_state}
   end
