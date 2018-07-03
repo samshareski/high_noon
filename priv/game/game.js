@@ -1,10 +1,10 @@
-
 // the game itself
 var game;
 var soundManager;
 var currentGameState = undefined;
 var currentPlayer;
 var canPoke = true;
+var canvas;
 
 // global game options
 var gameOptions = {
@@ -18,9 +18,9 @@ const username = document.querySelector('.name-input')
 username.value = JSON.parse(localStorage.getItem('user'));
 registerForm.addEventListener('submit', event => {
     event.preventDefault()
-
     registerPlayer(event.target['0'].value)
-    loadGame();
+    canvas.style.display = 'initial';
+    canPoke = true;
     registerForm.remove()
 })
   
@@ -41,7 +41,6 @@ function registerPlayer(name) {
 function getWebSocketURI() {
     const loc = window.location
     const wsProtocol = loc.protocol === 'https:' ? 'wss:' : 'ws:'
-    // return `${wsProtocol}//localhost:8080/ws`
     return `${wsProtocol}//${loc.host}/ws`
 }
 
@@ -72,13 +71,18 @@ function onClose(msg) {
 
 function onDisconnect(_) {
     console.log('Disconnected')
-    game.scene.scenes[0].resetScene()
+    game.scene.scenes[0].disconnected();
 }
 
 function onSearching() {
-    game.scene.scenes[0].resetScene()
+    game.scene.scenes[0].resetScene();
     game.scene.scenes[0].searching();
 }
+
+function onOpponentLeft(_) {
+    console.log('Opponent Left')
+    game.scene.scenes[0].opponentLeft();
+  }
 
 function onJoin({ game_roster }) {
   console.log('game roster', game_roster)
@@ -171,11 +175,19 @@ const RESPONSE_FUNCTIONS = {
     joined_game: onJoin,
     game_update: onGameUpdate,
     disconnected: onDisconnect,
+    opponent_left: onOpponentLeft
 }
 
 setTimeout(function() { window.scrollTo(0, 1) }, 100);
 
 // once the window loads...
+window.onload = function() {
+    loadGame();
+    canPoke= false;
+    canvas = document.querySelector('canvas')
+    canvas.style.display = 'none';
+}
+
 const loadGame = function () {
     // game configuration object
     var gameConfig = {
@@ -230,8 +242,8 @@ class playGame extends Phaser.Scene{
         this.load.spritesheet('player_backfire', '/assets/shoot_fail_spritesheet.png', {frameWidth: 400, frameHeight: 400, endFrame: 15});
         this.load.spritesheet('player_die', '/assets/die_spritesheet.png', {frameWidth: 400, frameHeight: 400, endFrame: 21});
 
-        this.load.audio("wind", "/assets/sounds/wind.mp3");
-        this.load.audio("tumbleweedSound", "/assets/sounds/tumbleweed.mp3");
+        // this.load.audio("wind", "/assets/sounds/wind.mp3");
+        // this.load.audio("tumbleweedSound", "/assets/sounds/tumbleweed.mp3");
 
     }
 
@@ -302,8 +314,8 @@ class playGame extends Phaser.Scene{
         this.cloudGroup.add(this.add.sprite(game.config.width / 2, game.config.height / 4, "cloud2"));
         this.cloudGroup.add(this.add.sprite(game.config.width / 1.2, game.config.height / 7, "cloud3"));
 
-        this.wind = this.sound.add("wind", {volume: 0.15, loop: true})
-        this.wind.play();
+        // this.wind = this.sound.add("wind", {volume: 0.15, loop: true})
+        // this.wind.play();
 
         this.status = this.add.text(game.config.width / 2, game.config.height / 2, "", { font: "bold 64px texas", fill: '#0a0a0a'});
         this.status.setOrigin(0.5,0)
@@ -332,31 +344,46 @@ class playGame extends Phaser.Scene{
         this.add.tween({targets: this.status, ease: 'Linear', duration: 600, alpha: 1})
     }
 
-    finished(){
+    finished() {
         this.subText.setText("click to search for new game");
         this.subText.alpha = 0;
         this.add.tween({targets: this.subText, ease: 'Linear', duration: 600, alpha: 1})
     }
 
-    searching(){
+    searching() {
+        this.status.alpha = 1;
         this.status.setText("Searching");
     }
 
-    joined(){
+    joined() {
+        this.status.alpha = 1;
         this.status.setText("Click to Ready");
     }
 
-    waiting(){
+    waiting() {
+        this.status.alpha = 1;
         this.status.setText("Waiting for other player");
     }
 
-    ready(){
-        this.status.setText("☝");
+    ready() {
+        this.status.setText("^ Shoot at Noon ^");
         this.status.alpha = 1;
         setTimeout(
         () => {
-            this.add.tween({targets: this.status, ease: 'Linear', duration: 600, alpha: 0})
-        }, 400);
+            this.add.tween({targets: this.status, ease: 'Linear', duration: 800, alpha: 0})
+        }, 600);
+    }
+
+    disconnected() {
+        this.resetScene();
+        this.status.setText('Disconnected')
+        this.subText.setText("click to search for new game");
+    }
+
+    opponentLeft() {
+        this.resetScene();
+        this.status.setText('Opponent Ran')
+        this.subText.setText("click to search for new game");
     }
 
     clearText(){
@@ -370,7 +397,7 @@ class playGame extends Phaser.Scene{
             this.player1Name.destroy();
             this.player2.destroy();
             this.player2Name.destroy();
-            this.minuteHand.rotation -= 0.2;
+            this.minuteHand.rotation = -0.2;
         }
         this.clearText();
     }
@@ -384,7 +411,7 @@ class playGame extends Phaser.Scene{
         this.player1 = this.add.sprite(game.config.width / 3.5, game.config.height / 1.4, 'idle');
         this.player1.anims.play('idle');
         this.player1.depth = 3;
-        this.player1Name = this.add.text(16, game.config.height / 1.1, currentPlayer === 'player_1' ? name + '🤠' : name, { font: "bold 50px texas", fill: '#0a0a0a'});
+        this.player1Name = this.add.text(16, game.config.height / 1.1, currentPlayer === 'player_1' ? name + ' *' : name, { font: "bold 50px texas", fill: '#0a0a0a'});
         this.player1Name.depth = 5;
     }
 
@@ -393,7 +420,7 @@ class playGame extends Phaser.Scene{
         this.player2.anims.play('idle');
         this.player2.depth = 3;
         this.player2.scaleX = -1
-        this.player2Name = this.add.text(game.config.width / 1.02, game.config.height / 1.1, currentPlayer === 'player_2' ? '🤠' + name : name, { font: "bold 50px texas", fill: '#0a0a0a'});
+        this.player2Name = this.add.text(game.config.width / 1.02, game.config.height / 1.1, currentPlayer === 'player_2' ? '* ' + name : name, { font: "bold 50px texas", fill: '#0a0a0a'});
         this.player2Name.x -= (this.player2Name.width);
         this.player2Name.depth = 5;
     }
@@ -434,8 +461,8 @@ class playGame extends Phaser.Scene{
             this.tumbleweed = this.add.sprite(-110, game.config.height / 1.4, "tumbleweed");
             this.tumbleweed.depth = 2;
 
-            this.tumbleweedSound = this.sound.add("tumbleweedSound", { volume: 0.05, loop: true })
-            this.tumbleweedSound.play();
+            // this.tumbleweedSound = this.sound.add("tumbleweedSound", { volume: 0.05, loop: true })
+            // this.tumbleweedSound.play();
         }
     }
 
@@ -443,13 +470,13 @@ class playGame extends Phaser.Scene{
         this.tumbleweedMoving = false;
         this.canTumbleweed = true;
         this.tumbleweed.destroy();
-        var fadeAudio = setInterval(() => {
-            if(this.tumbleweedSound.volume <= 0){
-                clearInterval(fadeAudio);
-                this.tumbleweedSound.stop();
-            }
-            this.tumbleweedSound.volume -= 0.01;
-        }, 200);
+        // var fadeAudio = setInterval(() => {
+        //     if(this.tumbleweedSound.volume <= 0){
+        //         clearInterval(fadeAudio);
+        //         this.tumbleweedSound.stop();
+        //     }
+        //     this.tumbleweedSound.volume -= 0.01;
+        // }, 200);
     }
 
     // method to be executed at each frame
